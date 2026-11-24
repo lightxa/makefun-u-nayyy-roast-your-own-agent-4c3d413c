@@ -26,6 +26,17 @@ ROAST = (
 )
 
 
+def error_message(problem: str, detail: str) -> str:
+    """Build one clear, single-line error message for a bad entry."""
+    return f"invalid entry: {problem} ({detail})"
+
+
+def explain_length(line: str) -> str:
+    """State the entry length in words a human can act on."""
+    words = len(line.split())
+    return f"{len(line)} characters, {words} words"
+
+
 def validate(line: str) -> None:
     """Guard the kit contract: 1 to 200 characters, a single line."""
     if not 1 <= len(line) <= 200:
@@ -39,13 +50,27 @@ def validate(line: str) -> None:
 validate(ROAST)
 
 
+def verify_written(path: Path, expected: str) -> None:
+    """Read the file back and re-validate what was actually written."""
+    written = path.read_text(encoding="utf-8")
+    if written != expected:
+        raise ValueError(
+            error_message(
+                "written text differs from roast", explain_length(written)
+            )
+        )
+    validate(written)
+
+
 def main() -> None:
     """Write the roast to entry.txt, one line and nothing else."""
     output_dir = Path(OUTPUT_DIR)
     output_dir.mkdir(parents=True, exist_ok=True)
     # No trailing newline, so the file holds exactly the roast: 1 to 200
     # characters of UTF-8 text, single line, no extra content.
-    (output_dir / "entry.txt").write_text(ROAST, encoding="utf-8")
+    target = output_dir / "entry.txt"
+    target.write_text(ROAST, encoding="utf-8")
+    verify_written(target, ROAST)
 
 
 if __name__ == "__main__":
